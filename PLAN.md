@@ -86,7 +86,30 @@ recent one).
 7. **Polish** — empty states (no doses logged yet), app icon, launch screen.
 8. **Install & validate on device** — confirm notification fires correctly across a real 14-day cycle (or a shortened test interval during development).
 
-## 8. Open items / assumptions to revisit later
+## 8. Deployment to device
+
+- Confirmed: you have a **paid Apple Developer Program account** ($99/yr),
+  not just a free Apple ID. This means the app's code-signing certificate
+  is valid for about **1 year** per build — no weekly reinstall needed like
+  a free-account signature would require.
+- Standard path: open the project in Xcode, connect the iPhone (USB or
+  paired Wi-Fi), select it as the run target, and hit Run — Xcode compiles,
+  signs, and installs directly onto the device. No App Store/TestFlight
+  needed for a single personal device.
+- Xcode's toolchain (or at least its Command Line Tools + iOS SDK, which
+  install alongside the full Xcode app) is required to compile and sign a
+  native Swift/SwiftUI app — there's no way around touching Apple's own
+  tooling on a Mac.
+- Xcode's GUI itself can be skipped in favor of Terminal (`xcodebuild` to
+  build, `xcrun devicectl device install app` to push to the phone), but
+  the underlying Xcode installation is still required.
+- Alternative with no Xcode install at all: **Swift Playgrounds** (free,
+  iPad or Mac) can create a real SwiftUI "App" project, build it, and
+  deploy wirelessly to a paired iPhone. Fully capable for an app this
+  small (button + list + local notifications) if a lighter workflow than
+  full Xcode is preferred.
+
+## 9. Open items / assumptions to revisit later
 
 - Notification timing is fixed at "morning of due date" for now; can add a
   configurable time or a second reminder later if it proves insufficient.
