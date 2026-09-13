@@ -2,10 +2,31 @@ import Foundation
 
 enum DoseScheduling {
     static let intervalInDays = 14
+    static let reminderHour = 9
 
     static func nextDueDate(after takenAt: Date) -> Date {
         Calendar.current.date(byAdding: .day, value: intervalInDays, to: takenAt)
             ?? takenAt.addingTimeInterval(TimeInterval(intervalInDays * 86_400))
+    }
+
+    // A past-dated calendar trigger never fires, so a missed due morning moves to the next one.
+    static func reminderFireDate(
+        forDoseTakenAt takenAt: Date,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> Date? {
+        let dueDate = nextDueDate(after: takenAt)
+
+        if let dueMorning = calendar.date(bySettingHour: reminderHour, minute: 0, second: 0, of: dueDate),
+           dueMorning > now {
+            return dueMorning
+        }
+
+        return calendar.nextDate(
+            after: now,
+            matching: DateComponents(hour: reminderHour, minute: 0),
+            matchingPolicy: .nextTime
+        )
     }
 
     static func relativeDueDescription(for dueDate: Date, now: Date = Date()) -> String {

@@ -6,7 +6,6 @@ final class NotificationManager {
     static let shared = NotificationManager()
 
     private let reminderIdentifier = "medreminder.dueNotification"
-    private let reminderHour = 9
 
     private init() {}
 
@@ -20,24 +19,25 @@ final class NotificationManager {
     /// Recomputes the next due date from the most recent dose (if any) and reschedules
     /// the single reminder notification, cancelling any previously scheduled one.
     func reschedule(mostRecentDose: Date?) {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [reminderIdentifier])
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [reminderIdentifier])
 
-        guard let mostRecentDose else { return }
-
-        let dueDate = DoseScheduling.nextDueDate(after: mostRecentDose)
-
-        var fireComponents = Calendar.current.dateComponents([.year, .month, .day], from: dueDate)
-        fireComponents.hour = reminderHour
-        fireComponents.minute = 0
+        guard let mostRecentDose,
+              let fireDate = DoseScheduling.reminderFireDate(forDoseTakenAt: mostRecentDose)
+        else { return }
 
         let content = UNMutableNotificationContent()
         content.title = "Medication due"
         content.body = "Time to take your medication."
         content.sound = .default
 
+        let fireComponents = Calendar.current.dateComponents(
+            [.year, .month, .day, .hour, .minute],
+            from: fireDate
+        )
         let trigger = UNCalendarNotificationTrigger(dateMatching: fireComponents, repeats: false)
         let request = UNNotificationRequest(identifier: reminderIdentifier, content: content, trigger: trigger)
 
-        UNUserNotificationCenter.current().add(request)
+        center.add(request)
     }
 }

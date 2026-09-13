@@ -2,28 +2,35 @@ import SwiftUI
 import SwiftData
 
 struct EditDoseView: View {
-    @Bindable var dose: DoseEvent
+    let dose: DoseEvent
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \DoseEvent.takenAt, order: .reverse) private var allDoses: [DoseEvent]
 
+    @State private var takenAt: Date
+    @State private var note: String
+
+    init(dose: DoseEvent) {
+        self.dose = dose
+        _takenAt = State(initialValue: dose.takenAt)
+        _note = State(initialValue: dose.note ?? "")
+    }
+
     var body: some View {
         Form {
-            DatePicker("Taken at", selection: $dose.takenAt, displayedComponents: [.date, .hourAndMinute])
+            DatePicker("Taken at", selection: $takenAt, displayedComponents: [.date, .hourAndMinute])
 
-            TextField(
-                "Note (optional)",
-                text: Binding(
-                    get: { dose.note ?? "" },
-                    set: { dose.note = $0.isEmpty ? nil : $0 }
-                )
-            )
+            TextField("Note (optional)", text: $note)
 
             Button("Delete entry", role: .destructive, action: deleteEntry)
         }
         .navigationTitle("Edit dose")
+        .navigationBarBackButtonHidden()
         .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") { dismiss() }
+            }
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save", action: save)
             }
@@ -31,6 +38,8 @@ struct EditDoseView: View {
     }
 
     private func save() {
+        dose.takenAt = takenAt
+        dose.note = note.isEmpty ? nil : note
         try? modelContext.save()
         NotificationManager.shared.reschedule(mostRecentDose: allDoses.map(\.takenAt).max())
         dismiss()
