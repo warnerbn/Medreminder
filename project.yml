@@ -1,0 +1,20 @@
+name: Medreminder
+options:
+  deploymentTarget:
+    iOS: "17.0"
+  bundleIdPrefix: com.medreminder
+targets:
+  Medreminder:
+    type: application
+    platform: iOS
+    sources:
+      - path: Medreminder
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.medreminder.app
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
