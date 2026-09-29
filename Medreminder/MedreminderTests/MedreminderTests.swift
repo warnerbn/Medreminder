@@ -233,3 +233,30 @@ struct TakeEarlyTests {
                                       calendar: calendar))
     }
 }
+
+@MainActor
+struct DoseSectionTests {
+    let now = date("2026-09-29 12:00")
+
+    private func section(due: String?, lastTaken: String?) -> DoseSection {
+        DoseSection.section(due: due.map(date), lastTaken: lastTaken.map(date), now: now, calendar: calendar)
+    }
+
+    @Test func pastDueIsOverdue() {
+        #expect(section(due: "2026-09-29 08:00", lastTaken: nil) == .overdue)
+        #expect(section(due: "2026-09-27 09:00", lastTaken: nil) == .overdue)
+    }
+
+    @Test func laterTodayIsToday() {
+        #expect(section(due: "2026-09-29 20:00", lastTaken: "2026-09-29 08:00") == .today)
+    }
+
+    @Test func takenTodayStaysInToday() {
+        #expect(section(due: "2026-10-13 09:00", lastTaken: "2026-09-29 09:10") == .today)
+    }
+
+    @Test func futureIsUpcoming() {
+        #expect(section(due: "2026-09-30 08:00", lastTaken: "2026-09-28 20:00") == .upcoming)
+        #expect(section(due: nil, lastTaken: nil) == .upcoming)
+    }
+}

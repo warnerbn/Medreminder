@@ -75,9 +75,14 @@ slot-index + 1 doses logged.
 
 ## 5. Screens
 
-**Today**
-- One card per medication, sorted by next due: name, big "Taken" button,
-  last taken, next due + relative hint (red when overdue).
+**Doses** (first tab)
+- Sections, empty ones hidden: **Overdue** (red), **Today** (due later today,
+  or already taken today — shown with a green checkmark), **Upcoming**.
+  "Nothing due today" when neither Overdue nor Today has anything.
+- One card per medication, soonest first: name, due hint, next due, last
+  taken, and a Taken button that locks (green checkmark) until the next dose
+  unlocks on its due day; "Take early…" for from-last-dose schedules or a
+  later dose due today.
 - Empty state points to the Medications tab.
 
 **History (Report)**

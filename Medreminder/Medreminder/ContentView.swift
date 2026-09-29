@@ -11,8 +11,8 @@ import SwiftData
 struct ContentView: View {
     var body: some View {
         TabView {
-            Tab("Today", systemImage: "pills") {
-                HomeView()
+            Tab("Doses", systemImage: "pills") {
+                DosesView()
             }
             Tab("History", systemImage: "list.bullet") {
                 HistoryView()

@@ -1,22 +1,42 @@
 //
-//  HomeView.swift
+//  DosesView.swift
 //  Medreminder
 //
 
 import SwiftUI
 import SwiftData
 
-struct HomeView: View {
+struct DosesView: View {
     @Query private var medications: [Medication]
 
     var body: some View {
         NavigationStack {
             // Re-render every minute so hints like "Due today at 8:00 PM" flip to overdue.
             TimelineView(.everyMinute) { context in
+                let now = context.date
+                let groups = grouped(now: now)
+
                 ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 320), spacing: 16)], spacing: 16) {
-                        ForEach(sorted(now: context.date)) { medication in
-                            MedicationCard(medication: medication, now: context.date)
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 320), spacing: 16, alignment: .top)],
+                              alignment: .leading, spacing: 16) {
+                        if !medications.isEmpty && groups[.overdue] == nil && groups[.today] == nil {
+                            Section {
+                                Label("Nothing due today", systemImage: "checkmark.circle")
+                                    .foregroundStyle(.secondary)
+                            } header: {
+                                SectionHeader(section: .today)
+                            }
+                        }
+                        ForEach(DoseSection.allCases, id: \.self) { section in
+                            if let items = groups[section] {
+                                Section {
+                                    ForEach(items) { medication in
+                                        MedicationCard(medication: medication, now: now)
+                                    }
+                                } header: {
+                                    SectionHeader(section: section)
+                                }
+                            }
                         }
                     }
                     .padding()
@@ -28,15 +48,30 @@ struct HomeView: View {
                                            description: Text("Add a medication in the Medications tab."))
                 }
             }
-            .navigationTitle("Today")
+            .navigationTitle("Doses")
         }
     }
 
-    /// Soonest (or most overdue) first; medications that are never due go last.
-    private func sorted(now: Date) -> [Medication] {
-        medications.sorted {
+    /// Medications by section, each soonest (or most overdue) first; empty sections are omitted.
+    private func grouped(now: Date) -> [DoseSection: [Medication]] {
+        let sorted = medications.sorted {
             ($0.nextDue(now: now) ?? .distantFuture) < ($1.nextDue(now: now) ?? .distantFuture)
         }
+        return Dictionary(grouping: sorted) {
+            DoseSection.section(due: $0.nextDue(now: now), lastTaken: $0.lastDose?.takenAt, now: now)
+        }
+    }
+}
+
+private struct SectionHeader: View {
+    let section: DoseSection
+
+    var body: some View {
+        Text(section.title)
+            .font(.title3.bold())
+            .foregroundStyle(section == .overdue ? .red : .primary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 8)
     }
 }
 
@@ -154,11 +189,11 @@ private struct MedicationCard: View {
     container.mainContext.insert(shot)
     container.mainContext.insert(vitamin)
     container.mainContext.insert(DoseEvent(medication: shot, takenAt: .now.addingTimeInterval(-16 * 86_400)))
-    return HomeView()
+    return DosesView()
         .modelContainer(container)
 }
 
 #Preview("Empty") {
-    HomeView()
+    DosesView()
         .modelContainer(for: [Medication.self, DoseEvent.self], inMemory: true)
 }

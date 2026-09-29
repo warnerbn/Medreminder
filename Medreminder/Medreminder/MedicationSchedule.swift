@@ -182,6 +182,29 @@ struct DoseSchedule {
     }
 }
 
+/// Which part of the Doses screen a medication belongs in.
+enum DoseSection: CaseIterable {
+    case overdue, today, upcoming
+
+    var title: String {
+        switch self {
+        case .overdue: "Overdue"
+        case .today: "Today"
+        case .upcoming: "Upcoming"
+        }
+    }
+
+    /// Overdue if the next dose is past; Today if it's due later today or a
+    /// dose was already taken today; otherwise Upcoming.
+    static func section(due: Date?, lastTaken: Date?, now: Date = .now,
+                        calendar: Calendar = .current) -> DoseSection {
+        if let due, due < now { return .overdue }
+        if let due, calendar.isDate(due, inSameDayAs: now) { return .today }
+        if let lastTaken, calendar.isDate(lastTaken, inSameDayAs: now) { return .today }
+        return .upcoming
+    }
+}
+
 /// Human-readable status for a due date, e.g. "In 6 days" or "Overdue since 8:00 AM".
 enum DueHint {
     static func isOverdue(_ due: Date, now: Date = .now) -> Bool {
