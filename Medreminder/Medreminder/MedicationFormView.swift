@@ -106,6 +106,8 @@ struct MedicationFormView: View {
                         .disabled(!canSave)
                 }
             }
+            // Only Cancel/Save close the form; tapping outside or swiping down does nothing.
+            .interactiveDismissDisabled()
             .onChange(of: countsFromLastDose) { _, counts in
                 // Start fixed weekly schedules on the start date's weekday.
                 if !counts && weekdays.isEmpty {
