@@ -15,27 +15,27 @@ struct DosesView: View {
             TimelineView(.everyMinute) { context in
                 let now = context.date
                 let groups = grouped(now: now)
+                // Today always shows (with "Nothing due today") unless something is overdue.
+                let showNothingDue = !medications.isEmpty && groups[.overdue] == nil && groups[.today] == nil
+                let visible = DoseSection.allCases.filter {
+                    groups[$0] != nil || ($0 == .today && showNothingDue)
+                }
 
                 ScrollView {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 320), spacing: 16, alignment: .top)],
                               alignment: .leading, spacing: 16) {
-                        if !medications.isEmpty && groups[.overdue] == nil && groups[.today] == nil {
+                        ForEach(visible, id: \.self) { section in
                             Section {
-                                Label("Nothing due today", systemImage: "checkmark.circle")
-                                    .foregroundStyle(.secondary)
-                            } header: {
-                                SectionHeader(section: .today)
-                            }
-                        }
-                        ForEach(DoseSection.allCases, id: \.self) { section in
-                            if let items = groups[section] {
-                                Section {
+                                if let items = groups[section] {
                                     ForEach(items) { medication in
                                         MedicationCard(medication: medication, now: now)
                                     }
-                                } header: {
-                                    SectionHeader(section: section)
+                                } else {
+                                    Label("Nothing due today", systemImage: "checkmark.circle")
+                                        .foregroundStyle(.secondary)
                                 }
+                            } header: {
+                                SectionHeader(section: section, showsDivider: section != visible.first)
                             }
                         }
                     }
@@ -65,13 +65,21 @@ struct DosesView: View {
 
 private struct SectionHeader: View {
     let section: DoseSection
+    /// A rule above the heading separates this section from the one before it.
+    let showsDivider: Bool
 
     var body: some View {
-        Text(section.title)
-            .font(.title3.bold())
-            .foregroundStyle(section == .overdue ? .red : .primary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.top, 8)
+        VStack(alignment: .leading, spacing: 12) {
+            if showsDivider {
+                Divider()
+                    .padding(.top, 12)
+            }
+            Text(section.title)
+                .font(.title3.bold())
+                .foregroundStyle(section == .overdue ? .red : .primary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, showsDivider ? 0 : 8)
     }
 }
 
