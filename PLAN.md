@@ -1,6 +1,6 @@
 # Medreminder — Plan
 
-Status: **in progress** — phases 1–9 done; on-device validation (phase 10) next.
+Status: **complete** — all build phases done and validated on device (2026-09-29). See section 9 for possible follow-ups.
 
 ## 1. Problem
 
@@ -130,9 +130,7 @@ slot-index + 1 doses logged.
 8. ~~**History + edit/delete**~~ — done (built before phase 7): list with medication names; correct or remove
    a past entry.
 9. ~~**Polish**~~ — done: app icon (light/dark/tinted), "Reminders are off" banner with a Settings link; empty states on every tab; default system launch screen kept.
-10. **Install & validate on device** — delete and reinstall once (existing
-    doses are test data), add real medications, confirm notifications fire
-    (shortened intervals during development).
+10. ~~**Install & validate on device**~~ — done: reminders arrive at dose times, "Reminders are off" notice and Settings link work, branded launch screen shows (validated on iPad, 2026-09-29).
 
 ## 8. Deployment to device
 
