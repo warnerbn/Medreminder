@@ -5,9 +5,12 @@
 
 import SwiftUI
 import SwiftData
+import UserNotifications
 
 struct DosesView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @Query private var medications: [Medication]
+    @State private var notificationsDenied = false
 
     var body: some View {
         NavigationStack {
@@ -22,20 +25,25 @@ struct DosesView: View {
                 }
 
                 ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 320), spacing: 16, alignment: .top)],
-                              alignment: .leading, spacing: 16) {
-                        ForEach(visible, id: \.self) { section in
-                            Section {
-                                if let items = groups[section] {
-                                    ForEach(items) { medication in
-                                        MedicationCard(medication: medication, now: now)
+                    VStack(spacing: 16) {
+                        if notificationsDenied && !medications.isEmpty {
+                            NotificationsOffBanner()
+                        }
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 320), spacing: 16, alignment: .top)],
+                                  alignment: .leading, spacing: 16) {
+                            ForEach(visible, id: \.self) { section in
+                                Section {
+                                    if let items = groups[section] {
+                                        ForEach(items) { medication in
+                                            MedicationCard(medication: medication, now: now)
+                                        }
+                                    } else {
+                                        Label("Nothing due today", systemImage: "checkmark.circle")
+                                            .foregroundStyle(.secondary)
                                     }
-                                } else {
-                                    Label("Nothing due today", systemImage: "checkmark.circle")
-                                        .foregroundStyle(.secondary)
+                                } header: {
+                                    SectionHeader(section: section, showsDivider: section != visible.first)
                                 }
-                            } header: {
-                                SectionHeader(section: section, showsDivider: section != visible.first)
                             }
                         }
                     }
@@ -49,7 +57,19 @@ struct DosesView: View {
                 }
             }
             .navigationTitle("Doses")
+            .task { await refreshNotificationStatus() }
+            .onChange(of: scenePhase) { _, phase in
+                // Catch changes made in Settings (or the first-launch permission prompt).
+                if phase == .active {
+                    Task { await refreshNotificationStatus() }
+                }
+            }
         }
+    }
+
+    private func refreshNotificationStatus() async {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        notificationsDenied = settings.authorizationStatus == .denied
     }
 
     /// Medications by section, each soonest (or most overdue) first; empty sections are omitted.
@@ -60,6 +80,35 @@ struct DosesView: View {
         return Dictionary(grouping: sorted) {
             DoseSection.section(due: $0.nextDue(now: now), lastTaken: $0.lastDose?.takenAt, now: now)
         }
+    }
+}
+
+/// Shown when notifications are turned off, since reminders silently won't arrive.
+private struct NotificationsOffBanner: View {
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "bell.slash.fill")
+                .font(.title2)
+                .foregroundStyle(.orange)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Reminders are off")
+                    .font(.headline)
+                Text("Turn on notifications for Medreminder to get an alert when a dose is due.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Button("Open Settings") {
+                    if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                        openURL(url)
+                    }
+                }
+                .font(.subheadline.bold())
+            }
+            Spacer(minLength: 0)
+        }
+        .padding()
+        .background(.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 16))
     }
 }
 

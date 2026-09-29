@@ -1,6 +1,6 @@
 # Medreminder — Plan
 
-Status: **in progress** — phases 1–8 done; polish (phase 9) and on-device validation (phase 10) next.
+Status: **in progress** — phases 1–9 done; on-device validation (phase 10) next.
 
 ## 1. Problem
 
@@ -129,7 +129,7 @@ slot-index + 1 doses logged.
 7. ~~**Notifications**~~ — done: permission request, next 8 reminders per medication (60 max), rescheduled on every change and when the app opens; banners shown in-app too.
 8. ~~**History + edit/delete**~~ — done (built before phase 7): list with medication names; correct or remove
    a past entry.
-9. **Polish** — empty states, app icon, launch screen.
+9. ~~**Polish**~~ — done: app icon (light/dark/tinted), "Reminders are off" banner with a Settings link; empty states on every tab; default system launch screen kept.
 10. **Install & validate on device** — delete and reinstall once (existing
     doses are test data), add real medications, confirm notifications fire
     (shortened intervals during development).
