@@ -42,6 +42,14 @@ struct DoseSchedule {
             : nextFixedDue(takenDates: takenDates, now: now, calendar: calendar)
     }
 
+    /// When the Taken button unlocks for the dose due at `due`: the start of its
+    /// day for a day's first dose (so it can be taken any time that day), or the
+    /// dose's own time for a later dose on a day that already has one logged.
+    func unlockDate(forDue due: Date, takenDates: [Date], calendar: Calendar = .current) -> Date {
+        let dayStarted = takenDates.contains { calendar.isDate($0, inSameDayAs: due) }
+        return dayStarted ? due : calendar.startOfDay(for: due)
+    }
+
     /// The next `count` due slots, assuming each one is taken on time.
     func upcoming(count: Int, takenDates: [Date], now: Date = .now, calendar: Calendar = .current) -> [Date] {
         var taken = takenDates

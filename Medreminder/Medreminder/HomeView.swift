@@ -67,15 +67,38 @@ private struct MedicationCard: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
-            Button(action: logDose) {
-                Label("Taken", systemImage: "checkmark.circle.fill")
-                    .font(.title3.bold())
-                    .frame(maxWidth: .infinity, minHeight: 50)
+            if isUnlocked(due: due) {
+                Button(action: logDose) {
+                    Label("Taken", systemImage: "checkmark.circle.fill")
+                        .font(.title3.bold())
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                }
+                .buttonStyle(.borderedProminent)
+                .buttonBorderShape(.roundedRectangle(radius: 14))
+            } else if medication.lastDose != nil {
+                // Done until the next dose unlocks: not a button, so it can't be tapped.
+                Label {
+                    Text("Taken")
+                } icon: {
+                    Image(systemName: "checkmark.circle.fill")
+                }
+                .font(.title3.bold())
+                .foregroundStyle(.green)
+                .frame(maxWidth: .infinity, minHeight: 50)
+                .background(.green.opacity(0.15), in: RoundedRectangle(cornerRadius: 14))
+                .accessibilityLabel("Taken. Next dose not due yet.")
+            } else {
+                Button {} label: {
+                    Text("Not due yet")
+                        .font(.title3.bold())
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                }
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.roundedRectangle(radius: 14))
+                .disabled(true)
             }
-            .buttonStyle(.borderedProminent)
-            .buttonBorderShape(.roundedRectangle(radius: 14))
-            .sensoryFeedback(.success, trigger: medication.doses.count)
         }
+        .sensoryFeedback(.success, trigger: medication.doses.count)
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.background.secondary, in: RoundedRectangle(cornerRadius: 20))
@@ -84,6 +107,14 @@ private struct MedicationCard: View {
     private var lastTakenText: String {
         guard let last = medication.lastDose else { return "Not taken yet" }
         return "Last taken \(last.takenAt.formatted(.dateTime.weekday(.abbreviated).month().day().hour().minute()))"
+    }
+
+    /// The Taken button unlocks at the start of the due day, or at a later
+    /// dose's own time on a day that already has a dose logged.
+    private func isUnlocked(due: Date?) -> Bool {
+        guard let due else { return false }
+        let unlock = medication.schedule.unlockDate(forDue: due, takenDates: medication.doses.map(\.takenAt))
+        return now >= unlock
     }
 
     private func logDose() {

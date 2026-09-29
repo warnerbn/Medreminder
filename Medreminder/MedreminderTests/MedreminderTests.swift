@@ -188,3 +188,29 @@ struct ScheduleSummaryTests {
         #expect(summary(schedule) == "Monthly, from last dose · 1x at 9:00 AM")
     }
 }
+
+@MainActor
+struct UnlockTests {
+    let daily2x = DoseSchedule(frequency: .daily, doseTimes: [8 * 60, 20 * 60],
+                               startDate: date("2026-09-01 00:00"))
+
+    @Test func firstDoseOfDayUnlocksAtMidnight() {
+        let due = date("2026-09-30 08:00")
+        let unlock = daily2x.unlockDate(forDue: due, takenDates: [date("2026-09-29 20:00")], calendar: calendar)
+        #expect(unlock == date("2026-09-30 00:00"))
+    }
+
+    @Test func laterDoseUnlocksAtItsTime() {
+        let due = date("2026-09-29 20:00")
+        let unlock = daily2x.unlockDate(forDue: due, takenDates: [date("2026-09-29 08:00")], calendar: calendar)
+        #expect(unlock == due)
+    }
+
+    @Test func biweeklyUnlocksOnDueDay() {
+        let biweekly = DoseSchedule(frequency: .weekly, doseTimes: [9 * 60], startDate: date("2026-09-01 00:00"),
+                                    weekInterval: 2, countsFromLastDose: true)
+        let taken = [date("2026-09-17 13:52")]
+        let due = biweekly.nextDue(takenDates: taken, calendar: calendar)!
+        #expect(biweekly.unlockDate(forDue: due, takenDates: taken, calendar: calendar) == date("2026-10-01 00:00"))
+    }
+}
