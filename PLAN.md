@@ -155,11 +155,17 @@ slot-index + 1 doses logged.
   small (button + list + local notifications) if a lighter workflow than
   full Xcode is preferred.
 
-## 9. Open items / assumptions to revisit later
+## 9. Potential next steps
 
-- No reminder escalation (repeat notifications) — can add if a single
-  alert gets missed too often in practice.
-- Missed fixed-schedule doses don't carry over: once a newer scheduled day
-  arrives, older uncovered slots are no longer shown as overdue.
-- No widget / Lock Screen complication in this plan — could be a fast
-  follow-up once the core app works.
+Not planned yet — candidates to pick from once the app has been in daily use.
+
+- **Repeat reminders** — if a dose goes untaken, remind again (e.g. hourly)
+  until Taken is tapped. Today each dose gets a single alert.
+- **Missed fixed-schedule doses** — a missed daily/weekday dose stops showing
+  as overdue once the next scheduled day arrives. Could keep it overdue (or
+  list it separately) until it's logged or dismissed.
+- **Widget / Lock Screen** — show the next due dose without opening the app.
+- **Add a past dose from History** — log a dose after the fact (e.g. one
+  taken while away from the device), complementing "Take early…".
+- **"Discard changes?" on Cancel** — confirm before closing the medication
+  or dose form with unsaved edits.
