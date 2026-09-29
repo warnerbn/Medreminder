@@ -58,7 +58,8 @@ struct DoseEditView: View {
             .confirmationDialog("Delete this dose?", isPresented: $isConfirmingDelete,
                                 titleVisibility: .visible) {
                 Button("Delete", role: .destructive) {
-                    modelContext.delete(dose)
+                    modelContext.deleteDose(dose)
+                    try? modelContext.save()
                     dismiss()
                 }
             }

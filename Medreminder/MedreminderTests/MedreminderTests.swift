@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import Observation
+import SwiftData
 import Testing
 @testable import Medreminder
 
@@ -305,5 +307,41 @@ struct ReminderPlannerTests {
         let inputs = (0..<10).map { ReminderPlanner.Input(id: "\($0)", name: "Med \($0)",
                                                            schedule: daily4x, takenDates: []) }
         #expect(ReminderPlanner.plan(inputs, now: now, calendar: calendar).count == ReminderPlanner.totalLimit)
+    }
+}
+
+/// Regression tests: views read `medication.doses`, so every dose change must
+/// notify observers of that property or cards lag until their minute refresh.
+@MainActor
+struct DoseObservationTests {
+    let container: ModelContainer
+    let context: ModelContext
+    let medication = Medication(name: "A")
+
+    init() throws {
+        container = try ModelContainer(for: Medication.self, DoseEvent.self,
+                                       configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        context = container.mainContext
+        context.insert(medication)
+        try context.save()
+    }
+
+    private func notifiesDoses(when mutate: () -> Void) -> Bool {
+        nonisolated(unsafe) var changed = false
+        withObservationTracking { _ = medication.doses } onChange: { changed = true }
+        mutate()
+        return changed
+    }
+
+    @Test func loggingADoseNotifies() {
+        #expect(notifiesDoses { medication.logDose() })
+        #expect(medication.doses.count == 1)
+    }
+
+    @Test func deletingADoseNotifies() throws {
+        let dose = medication.logDose()
+        try context.save()
+        #expect(notifiesDoses { context.deleteDose(dose) })
+        #expect(medication.doses.isEmpty)
     }
 }

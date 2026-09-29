@@ -64,3 +64,23 @@ extension Medication {
         schedule.nextDue(takenDates: doses.map(\.takenAt), now: now)
     }
 }
+
+// Change doses through `doses` itself: SwiftData doesn't notify views observing
+// `medication.doses` when a dose is linked or deleted from the DoseEvent side,
+// so cards would stay stale until their next periodic refresh.
+extension Medication {
+    @discardableResult
+    func logDose(at takenAt: Date = .now) -> DoseEvent {
+        let dose = DoseEvent(takenAt: takenAt)
+        doses.append(dose)
+        return dose
+    }
+}
+
+extension ModelContext {
+    /// Deletes a dose, first removing it from its medication so views update right away.
+    func deleteDose(_ dose: DoseEvent) {
+        dose.medication?.doses.removeAll { $0.id == dose.id }
+        delete(dose)
+    }
+}

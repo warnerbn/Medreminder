@@ -30,8 +30,9 @@ struct HistoryView: View {
                         }
                         .onDelete { offsets in
                             for index in offsets {
-                                modelContext.delete(group.doses[index])
+                                modelContext.deleteDose(group.doses[index])
                             }
+                            try? modelContext.save()
                         }
                     }
                 }

@@ -185,7 +185,8 @@ private struct MedicationCard: View {
     }
 
     private func logDose() {
-        modelContext.insert(DoseEvent(medication: medication))
+        medication.logDose()
+        try? modelContext.save()
     }
 }
 
