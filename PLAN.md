@@ -1,6 +1,6 @@
 # Medreminder — Plan
 
-Status: **complete** — all build phases done and validated on device (2026-09-29). See section 9 for possible follow-ups.
+Status: **complete** — all build phases done and validated on device (2026-09-29). See section 9 for limitations and section 10 for possible follow-ups.
 
 ## 1. Problem
 
@@ -154,8 +154,54 @@ slot-index + 1 doses logged.
   deploy wirelessly to a paired iPhone. Fully capable for an app this
   small (button + list + local notifications) if a lighter workflow than
   full Xcode is preferred.
+- Current iPad install (checked 2026-09-29): provisioning profile and
+  "Apple Development" certificate both expire **2027-09-29**. Re-run from
+  Xcode before then; the reinstall keeps all data. Two older development
+  certificates in the keychain expired 2026-09-24 and are unused.
+- Other distribution routes if needed later: Ad Hoc builds (registered
+  devices, up to 1 year), TestFlight (90-day builds; internal testers need
+  no review), or the App Store (review, privacy policy; "Data Not
+  Collected").
 
-## 9. Potential next steps
+## 9. Limitations
+
+**Data storage and privacy**
+- All data (medications, doses) lives only in the app's private on-device
+  SwiftData store. There is no sync between devices and no export; each
+  device's install is separate.
+- The app has **no iCloud access**: no iCloud/CloudKit entitlement, and no
+  CloudKit or iCloud code. It makes no network connections; notifications
+  are scheduled locally.
+- The only off-device copy is the device's own backup (iCloud Backup or a
+  Finder backup), which iOS makes for every app. The app can't read or
+  control that backup.
+
+**What keeps data safe**
+- Signing expiry doesn't delete anything: an expired app just won't open
+  until it's re-run from Xcode, which updates it in place with data intact.
+- Updates in place (Xcode, TestFlight, App Store) keep data **only with the
+  same bundle ID (`baw.Medreminder`) and team**.
+- Data is lost by: deleting the app, changing the bundle ID or team, or
+  resetting the device without a backup.
+- Future data-model changes: adding fields migrates automatically;
+  renaming/removing fields or changing types needs a planned SwiftData
+  migration, or the app may fail to open its existing store.
+
+**Running the app**
+- Requires iOS 26.5+ (lower Minimum Deployments to go back as far as iOS
+  17, SwiftData's minimum).
+- Developer Mode must stay on for the Xcode-installed build, and the paid
+  developer membership must stay active.
+- Each dose gets a single reminder; missed doses aren't re-alerted.
+- Reminders are scheduled up to 8 per medication (60 total) ahead and
+  refreshed when the app opens or data changes. If the app isn't opened for
+  a long stretch on a many-dose schedule, reminders can run out until the
+  next launch.
+- Fixed schedules (daily, specific weekdays) can't log a future day's dose
+  early — only floating (from-last-dose, monthly) schedules or a later dose
+  due the same day.
+
+## 10. Potential next steps
 
 Not planned yet — candidates to pick from once the app has been in daily use.
 
