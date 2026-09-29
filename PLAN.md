@@ -205,6 +205,15 @@ slot-index + 1 doses logged.
 
 Not planned yet — candidates to pick from once the app has been in daily use.
 
+- **Reminders that don't run out** — today only the next 8 reminders per
+  medication are scheduled (about 8 days for 1x daily, 2 days for 4x), so
+  they stop if the app isn't opened for that long. For daily and
+  every-week schedules, use repeating triggers (one per dose time, daily or
+  per weekday) instead of one-off ones. Every-2+-weeks and floating
+  schedules can't be expressed as repeating triggers, so keep one-off
+  reminders for those and also refresh them in the background (background
+  app refresh).
+
 - **Repeat reminders** — if a dose goes untaken, remind again (e.g. hourly)
   until Taken is tapped. Today each dose gets a single alert.
 - **Missed fixed-schedule doses** — a missed daily/weekday dose stops showing
