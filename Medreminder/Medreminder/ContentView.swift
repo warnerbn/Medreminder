@@ -17,6 +17,9 @@ struct ContentView: View {
             Tab("History", systemImage: "list.bullet") {
                 HistoryView()
             }
+            Tab("Medications", systemImage: "cross.vial") {
+                MedicationsView()
+            }
         }
     }
 }

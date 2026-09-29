@@ -159,3 +159,32 @@ struct DueHintTests {
         #expect(text.replacingOccurrences(of: "\u{202F}", with: " ") == expected)
     }
 }
+
+@MainActor
+struct ScheduleSummaryTests {
+    private func summary(_ schedule: DoseSchedule) -> String {
+        schedule.summary(calendar: calendar).replacingOccurrences(of: "\u{202F}", with: " ")
+    }
+
+    @Test func dailyTwiceADay() {
+        let schedule = DoseSchedule(frequency: .daily, doseTimes: [20 * 60, 8 * 60], startDate: .now)
+        #expect(summary(schedule) == "Daily · 2x at 8:00 AM, 8:00 PM")
+    }
+
+    @Test func weeklyOnDays() {
+        let schedule = DoseSchedule(frequency: .weekly, doseTimes: [9 * 60], startDate: .now,
+                                    weekdays: [6, 3], weekInterval: 2)
+        #expect(summary(schedule) == "Every 2 weeks on Tue, Fri · 1x at 9:00 AM")
+    }
+
+    @Test func weeklyFromLastDose() {
+        let schedule = DoseSchedule(frequency: .weekly, doseTimes: [9 * 60], startDate: .now,
+                                    weekInterval: 2, countsFromLastDose: true)
+        #expect(summary(schedule) == "Every 2 weeks, from last dose · 1x at 9:00 AM")
+    }
+
+    @Test func monthly() {
+        let schedule = DoseSchedule(frequency: .monthly, doseTimes: [9 * 60], startDate: .now)
+        #expect(summary(schedule) == "Monthly, from last dose · 1x at 9:00 AM")
+    }
+}

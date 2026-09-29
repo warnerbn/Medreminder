@@ -54,6 +54,41 @@ struct DoseSchedule {
         return result
     }
 
+    /// One-line description, e.g. "Every 2 weeks on Tue, Fri · 2x at 8:00 AM, 8:00 PM".
+    func summary(calendar: Calendar = .current) -> String {
+        let repeatText: String
+        switch frequency {
+        case .daily:
+            repeatText = "Daily"
+        case .weekly:
+            let every = weekInterval > 1 ? "Every \(weekInterval) weeks" : "Every week"
+            if countsFromLastDose {
+                repeatText = "\(every), from last dose"
+            } else {
+                let days = Self.orderedWeekdays(calendar: calendar)
+                    .filter { weekdays.contains($0) }
+                    .map { calendar.shortWeekdaySymbols[$0 - 1] }
+                    .joined(separator: ", ")
+                repeatText = days.isEmpty ? every : "\(every) on \(days)"
+            }
+        case .monthly:
+            repeatText = "Monthly, from last dose"
+        }
+
+        var timeStyle = Date.FormatStyle(date: .omitted, time: .shortened)
+        timeStyle.timeZone = calendar.timeZone
+        let today = calendar.startOfDay(for: .now)
+        let times = doseTimes.sorted()
+            .map { calendar.date(byAdding: .minute, value: $0, to: today)!.formatted(timeStyle) }
+            .joined(separator: ", ")
+        return "\(repeatText) · \(doseTimes.count)x at \(times)"
+    }
+
+    /// Weekday numbers (1 = Sunday) starting from the locale's first day of the week.
+    static func orderedWeekdays(calendar: Calendar = .current) -> [Int] {
+        (0..<7).map { (calendar.firstWeekday - 1 + $0) % 7 + 1 }
+    }
+
     // MARK: - Fixed schedules
 
     private func nextFixedDue(takenDates: [Date], now: Date, calendar: Calendar) -> Date? {
