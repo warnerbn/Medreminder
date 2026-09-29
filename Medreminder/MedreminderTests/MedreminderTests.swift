@@ -214,3 +214,22 @@ struct UnlockTests {
         #expect(biweekly.unlockDate(forDue: due, takenDates: taken, calendar: calendar) == date("2026-10-01 00:00"))
     }
 }
+
+@MainActor
+struct TakeEarlyTests {
+    @Test func floatingCanTakeEarlyOnAnotherDay() {
+        let biweekly = DoseSchedule(frequency: .weekly, doseTimes: [9 * 60], startDate: date("2026-09-01 00:00"),
+                                    weekInterval: 2, countsFromLastDose: true)
+        #expect(biweekly.canTakeEarly(forDue: date("2026-10-01 09:00"), now: date("2026-09-30 18:00"),
+                                      calendar: calendar))
+    }
+
+    @Test func fixedCanTakeEarlyOnlySameDay() {
+        let daily2x = DoseSchedule(frequency: .daily, doseTimes: [8 * 60, 20 * 60],
+                                   startDate: date("2026-09-01 00:00"))
+        #expect(daily2x.canTakeEarly(forDue: date("2026-09-29 20:00"), now: date("2026-09-29 19:30"),
+                                     calendar: calendar))
+        #expect(!daily2x.canTakeEarly(forDue: date("2026-09-30 08:00"), now: date("2026-09-29 21:00"),
+                                      calendar: calendar))
+    }
+}

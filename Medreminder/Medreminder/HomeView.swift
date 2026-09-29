@@ -45,6 +45,8 @@ private struct MedicationCard: View {
     let medication: Medication
     let now: Date
 
+    @State private var isConfirmingEarly = false
+
     var body: some View {
         let due = medication.nextDue(now: now)
 
@@ -97,6 +99,21 @@ private struct MedicationCard: View {
                 .buttonBorderShape(.roundedRectangle(radius: 14))
                 .disabled(true)
             }
+
+            if let due, !isUnlocked(due: due),
+               medication.schedule.canTakeEarly(forDue: due, now: now) {
+                Button("Take early…") { isConfirmingEarly = true }
+                    .font(.subheadline)
+                    .buttonStyle(.borderless)
+                    .frame(maxWidth: .infinity)
+                    .confirmationDialog("Take \(medication.name) now?",
+                                        isPresented: $isConfirmingEarly,
+                                        titleVisibility: .visible) {
+                        Button("Log Dose Now", action: logDose)
+                    } message: {
+                        Text(earlyMessage(due: due))
+                    }
+            }
         }
         .sensoryFeedback(.success, trigger: medication.doses.count)
         .padding()
@@ -115,6 +132,13 @@ private struct MedicationCard: View {
         guard let due else { return false }
         let unlock = medication.schedule.unlockDate(forDue: due, takenDates: medication.doses.map(\.takenAt))
         return now >= unlock
+    }
+
+    private func earlyMessage(due: Date) -> String {
+        let dueText = due.formatted(.dateTime.weekday(.wide).month(.wide).day().hour().minute())
+        return medication.schedule.isFloating
+            ? "It isn't due until \(dueText). The next dose will be counted from now."
+            : "It isn't due until \(dueText). This logs that dose now."
     }
 
     private func logDose() {

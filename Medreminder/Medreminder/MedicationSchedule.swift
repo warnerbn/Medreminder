@@ -50,6 +50,13 @@ struct DoseSchedule {
         return dayStarted ? due : calendar.startOfDay(for: due)
     }
 
+    /// Whether a dose logged now would count toward the dose due at `due`.
+    /// Floating schedules restart from any dose; fixed schedules only count
+    /// doses logged on the due day itself.
+    func canTakeEarly(forDue due: Date, now: Date = .now, calendar: Calendar = .current) -> Bool {
+        isFloating || calendar.isDate(due, inSameDayAs: now)
+    }
+
     /// The next `count` due slots, assuming each one is taken on time.
     func upcoming(count: Int, takenDates: [Date], now: Date = .now, calendar: Calendar = .current) -> [Date] {
         var taken = takenDates
