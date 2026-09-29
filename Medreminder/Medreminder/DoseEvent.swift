@@ -23,3 +23,13 @@ final class DoseEvent {
         self.note = note
     }
 }
+
+extension DoseEvent {
+    /// Days between doses.
+    static let intervalDays = 14
+
+    /// When the next dose is due if this is the most recent one.
+    var nextDueDate: Date {
+        Calendar.current.date(byAdding: .day, value: Self.intervalDays, to: takenAt)!
+    }
+}
