@@ -1,7 +1,6 @@
 # Medreminder — Plan
 
-Status: **in progress** — phases 1–3 done (single 14-day medication).
-Phases 4+ extend the app to multiple medications with their own schedules.
+Status: **in progress** — phases 1–6 and 8 done; notifications (phase 7) next.
 
 ## 1. Problem
 
@@ -117,13 +116,13 @@ slot-index + 1 doses logged.
 1. ~~**Project setup**~~ — done.
 2. ~~**Core logging**~~ — done (single medication).
 3. ~~**Next-dose calculation**~~ — done (fixed 14 days).
-4. **Medication model + schedule logic** — `Medication` model, `DoseEvent`
+4. ~~**Medication model + schedule logic**~~ — done: `Medication` model, `DoseEvent`
    relationship, schedule calculation, unit tests (daily, weekly fixed with
    N=2, weekly from last dose, monthly on the 31st, multi-dose days).
-5. **Medications tab** — list, add/edit form, delete.
-6. **Today tab** — per-medication cards.
+5. ~~**Medications tab**~~ — done: list, add/edit form, delete.
+6. ~~**Today tab**~~ — done: per-medication cards.
 7. **Notifications** — permission request, scheduling, rescheduling.
-8. **History + edit/delete** — list with medication names; correct or remove
+8. ~~**History + edit/delete**~~ — done (built before phase 7): list with medication names; correct or remove
    a past entry.
 9. **Polish** — empty states, app icon, launch screen.
 10. **Install & validate on device** — delete and reinstall once (existing
