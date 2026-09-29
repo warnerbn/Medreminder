@@ -15,15 +15,19 @@ final class DoseEvent {
     var createdAt: Date
     /// Optional context, e.g. "took a day early - travel".
     var note: String?
+    var medication: Medication?
 
-    init(takenAt: Date = .now, note: String? = nil) {
+    init(medication: Medication? = nil, takenAt: Date = .now, note: String? = nil) {
         self.id = UUID()
+        self.medication = medication
         self.takenAt = takenAt
         self.createdAt = .now
         self.note = note
     }
 }
 
+// Single-medication logic used by HomeView until the Today tab is
+// reworked for multiple medications (phase 6).
 extension DoseEvent {
     /// Days between doses.
     static let intervalDays = 14

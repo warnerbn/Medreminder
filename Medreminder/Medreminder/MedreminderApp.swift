@@ -14,6 +14,6 @@ struct MedreminderApp: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: DoseEvent.self)
+        .modelContainer(for: [Medication.self, DoseEvent.self])
     }
 }
