@@ -1,6 +1,6 @@
 # Medreminder — Plan
 
-Status: **in progress** — phases 1–6 and 8 done; notifications (phase 7) next.
+Status: **in progress** — phases 1–8 done; polish (phase 9) and on-device validation (phase 10) next.
 
 ## 1. Problem
 
@@ -126,7 +126,7 @@ slot-index + 1 doses logged.
    N=2, weekly from last dose, monthly on the 31st, multi-dose days).
 5. ~~**Medications tab**~~ — done: list, add/edit form, delete.
 6. ~~**Today tab**~~ — done: per-medication cards.
-7. **Notifications** — permission request, scheduling, rescheduling.
+7. ~~**Notifications**~~ — done: permission request, next 8 reminders per medication (60 max), rescheduled on every change and when the app opens; banners shown in-app too.
 8. ~~**History + edit/delete**~~ — done (built before phase 7): list with medication names; correct or remove
    a past entry.
 9. **Polish** — empty states, app icon, launch screen.

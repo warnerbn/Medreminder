@@ -260,3 +260,50 @@ struct DoseSectionTests {
         #expect(section(due: nil, lastTaken: nil) == .upcoming)
     }
 }
+
+@MainActor
+struct ReminderPlannerTests {
+    let now = date("2026-09-29 12:00")
+
+    @Test func skipsPastAndCoveredSlots() {
+        let daily2x = DoseSchedule(frequency: .daily, doseTimes: [8 * 60, 20 * 60],
+                                   startDate: date("2026-09-01 00:00"))
+        // Morning dose taken; the 8:00 PM dose is the first reminder.
+        let plan = ReminderPlanner.plan([.init(id: "a", name: "Vitamin D", schedule: daily2x,
+                                               takenDates: [date("2026-09-29 08:02")])],
+                                        now: now, calendar: calendar)
+        #expect(plan.count == ReminderPlanner.perMedication)
+        #expect(plan.first?.date == date("2026-09-29 20:00"))
+        #expect(plan.dropFirst().first?.date == date("2026-09-30 08:00"))
+    }
+
+    @Test func overdueSlotIsNotScheduled() {
+        let daily = DoseSchedule(frequency: .daily, doseTimes: [8 * 60], startDate: date("2026-09-01 00:00"))
+        let plan = ReminderPlanner.plan([.init(id: "a", name: "A", schedule: daily, takenDates: [])],
+                                        now: now, calendar: calendar)
+        #expect(plan.allSatisfy { $0.date > now })
+        #expect(plan.first?.date == date("2026-09-30 08:00"))
+    }
+
+    @Test func mergesMedicationsSoonestFirst() {
+        let daily = DoseSchedule(frequency: .daily, doseTimes: [9 * 60], startDate: date("2026-09-01 00:00"))
+        let biweekly = DoseSchedule(frequency: .weekly, doseTimes: [9 * 60], startDate: date("2026-09-01 00:00"),
+                                    weekInterval: 2, countsFromLastDose: true)
+        let plan = ReminderPlanner.plan([
+            .init(id: "shot", name: "Shot", schedule: biweekly, takenDates: [date("2026-09-17 09:00")]),
+            .init(id: "vit", name: "Vitamin", schedule: daily, takenDates: [date("2026-09-29 09:00")]),
+        ], now: now, calendar: calendar)
+        #expect(plan.map(\.date) == plan.map(\.date).sorted())
+        #expect(plan.first?.medicationName == "Vitamin")
+        #expect(plan.contains { $0.medicationName == "Shot" && $0.date == date("2026-10-01 09:00") })
+        #expect(Set(plan.map(\.identifier)).count == plan.count)
+    }
+
+    @Test func capsTotalBelowSystemLimit() {
+        let daily4x = DoseSchedule(frequency: .daily, doseTimes: [8 * 60, 12 * 60, 16 * 60, 20 * 60],
+                                   startDate: date("2026-09-01 00:00"))
+        let inputs = (0..<10).map { ReminderPlanner.Input(id: "\($0)", name: "Med \($0)",
+                                                           schedule: daily4x, takenDates: []) }
+        #expect(ReminderPlanner.plan(inputs, now: now, calendar: calendar).count == ReminderPlanner.totalLimit)
+    }
+}
