@@ -205,6 +205,9 @@ slot-index + 1 doses logged.
 
 Not planned yet — candidates to pick from once the app has been in daily use.
 
+- **Sync across your devices** — share medications and doses between your
+  own devices (same Apple ID) via iCloud. See section 11 for the strategy.
+
 - **Reminders that don't run out** — today only the next 8 reminders per
   medication are scheduled (about 8 days for 1x daily, 2 days for 4x), so
   they stop if the app isn't opened for that long. For daily and
@@ -224,3 +227,59 @@ Not planned yet — candidates to pick from once the app has been in daily use.
   taken while away from the device), complementing "Take early…".
 - **"Discard changes?" on Cancel** — confirm before closing the medication
   or dose form with unsaved edits.
+
+## 11. Strategy: iCloud sync across your devices
+
+Not started — recorded so it's ready to pick up.
+
+**Goal.** Several installs of the app on your own devices (same Apple ID,
+e.g. iPad + iPhone) share the same medications and doses. Every device keeps
+scheduling its own reminders; taking a dose on one device clears that dose's
+reminders on the others once the change arrives.
+
+**Approach.** SwiftData's built-in CloudKit mirroring to your **private
+iCloud database** — no server, no accounts, mostly configuration.
+
+**Model changes CloudKit requires** (all lightweight migrations, so the
+existing store upgrades in place):
+1. No unique constraints — drop `@Attribute(.unique)` from both `id`s.
+2. Every stored property has a declaration default (e.g. `var id = UUID()`,
+   `var name = ""`, `var frequency = Frequency.daily`,
+   `var takenAt = Date.now`).
+3. Relationships are optional — `doses: [DoseEvent]? = []`, keeping the
+   name. Add `var allDoses: [DoseEvent] { doses ?? [] }` for reads and keep
+   `logDose` / `deleteDose` mutating `doses` itself (so cards still update
+   instantly).
+
+**Container.** Build it explicitly with
+`ModelConfiguration(cloudKitDatabase: .private("iCloud.baw.Medreminder"))`
+and share it; tests keep in-memory stores with `cloudKitDatabase: .none`.
+
+**Rescheduling on remote changes.** While open, the `@Query`s in
+`ContentView` refresh on import and reschedule automatically. In the
+background, enable Background Modes → Remote notifications and, in
+`AppDelegate`, observe `NSPersistentStoreRemoteChange` to fetch medications
+and call `NotificationScheduler.reschedule` (verify on device; otherwise
+fall back to rescheduling when the app opens and note the delay).
+
+**Xcode capabilities (done by hand in Signing & Capabilities).** iCloud with
+CloudKit and container `iCloud.baw.Medreminder`; Background Modes → Remote
+notifications.
+
+**Rollout (protect existing data).**
+1. Back up the iPad (Finder or iCloud).
+2. Install the sync build on the iPad first — it migrates and uploads the
+   existing data.
+3. Delete any older copy on the other device, then install — it downloads
+   from iCloud. A device with its own data would merge in duplicates.
+
+**New limitations once done.** Requires iCloud sign-in with iCloud Drive
+on; Xcode-run builds use CloudKit's Development environment (TestFlight/App
+Store needs the schema deployed to Production, and all devices must use the
+same environment); other devices' reminders update only when the change
+arrives; models can only gain fields from then on — no renames/removals.
+
+**Verification.** Tests pass; iPad keeps its data after updating; a fresh
+iPhone install shows it within about a minute; Taken on one device turns the
+other's card green while open and clears its pending reminder; medication
+edits appear on both.
